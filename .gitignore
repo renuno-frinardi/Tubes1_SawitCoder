@@ -47,6 +47,10 @@ gradle-app.setting
 hs_err_pid*
 replay_pid*
 
+# Compiled Files
+client/
+matches/
+
 ###### ECLIPSE ######
 
 .metadata
