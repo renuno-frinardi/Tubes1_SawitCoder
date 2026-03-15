@@ -11,9 +11,7 @@ import third_bot.util.*;
  * 2. If enemy tower visible -> attack it (greedy: fight closest enemy)
  * 3. If unclaimed ruin visible -> capture it (greedy: closest unclaimed ruin)
  * 4. If SRP opportunity visible -> paint it
- * 5. Otherwise -> explore towards closest unexplored area
- * 
- * No goal stack, no persistent state between turns — pure greedy each round.
+ * 5. Otherwise -> explore towards closest unexplored area 
  */
 public final class Soldier extends Robot {
 
