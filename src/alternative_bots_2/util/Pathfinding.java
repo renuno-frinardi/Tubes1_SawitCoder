@@ -1,6 +1,6 @@
-package alternative_bots_2.util;
+package michael_2.util;
 
-import alternative_bots_2.*;
+import michael_2.*;
 
 import battlecode.common.*;
 
@@ -14,185 +14,87 @@ public class Pathfinding {
     ALLY_ONLY
   }
 
-  /**
-   * Sets the target destination for pathfinding
-   */
-  public static void setTarget(MapLocation newTarget) {
-    target = newTarget;
-  }
-
-  /**
-   * Gets the current target
-   */
+  public static void setTarget(MapLocation newTarget) { target = newTarget; }
   public static MapLocation getTarget() { return target; }
-
-  /**
-   * Clears the current target
-   */
   public static void clearTarget() { target = null; }
 
-  /**
-   * Gets the next greedy move towards the target.
-   */
+  /** Move towards target; falls back to any nearby direction. */
   public static Direction getMove() throws GameActionException { return getMove(Mode.ANY); }
 
-  /**
-   * Gets the next greedy move towards the target with paint mode.
-   */
   public static Direction getMove(Mode mode) throws GameActionException {
-    if (target == null) { return null; }
+    if (target == null) return null;
     MapLocation current = Robot.rc.getLocation();
+    if (current.isAdjacentTo(target)) return Direction.CENTER;
 
-    // Already at target
-    if (current.isAdjacentTo(target)) { return Direction.CENTER; }
-
-    // Try greedy move towards the target
     Direction dir = getGreedyMove(current, target, true, mode);
-    if (dir != null) { return dir; }
+    if (dir != null) return dir;
 
-    // If greedy fails, try any available direction towards target
     dir = closestAvailableDirection(current, current.directionTo(target));
-    if (dir != null && Robot.rc.canMove(dir)) { return dir; }
-
+    if (dir != null && Robot.rc.canMove(dir)) return dir;
     return null;
   }
 
-  /**
-   * Gets the best greedy move towards a goal location.
-   */
-  public static Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove, Mode mode) throws GameActionException {
-    Direction l_dir = loc.directionTo(goal);
-    MapLocation l_next = loc.add(l_dir);
-    if (MapData.passable(l_next) && 
-        (!checkCanMove || Robot.rc.canMove(l_dir)) &&
-        (switch (mode) { 
-          case Mode.ANY -> true;
-          case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(l_next).getPaint().isAlly(); 
-          case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(l_next).getPaint().isEnemy(); 
-        })) { return l_dir; }
-    
-    // Figure out which direction is better
-    Direction r_dir = l_dir.rotateRight();
-    MapLocation r_next = loc.add(r_dir);
-    l_dir = l_dir.rotateLeft();
-    l_next = loc.add(l_dir);
-    if (l_next.distanceSquaredTo(goal) < r_next.distanceSquaredTo(goal)) {
-      if (Robot.rc.onTheMap(l_next) && MapData.passable(l_next) &&
-          (!checkCanMove || Robot.rc.canMove(l_dir)) &&
-          (switch (mode) { 
-            case Mode.ANY -> true;
-            case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(l_next).getPaint().isAlly(); 
-            case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(l_next).getPaint().isEnemy(); 
-          })) { return l_dir; }
+  /** Check if a tile passes the paint mode filter. */
+  private static boolean checkMode(MapLocation loc, Mode mode) throws GameActionException {
+    return switch (mode) {
+      case ANY      -> true;
+      case ALLY_ONLY -> Robot.rc.senseMapInfo(loc).getPaint().isAlly();
+      case NO_ENEMY  -> !Robot.rc.senseMapInfo(loc).getPaint().isEnemy();
+    };
+  }
 
-      if (Robot.rc.onTheMap(r_next) && MapData.passable(r_next) &&
-          (!checkCanMove || Robot.rc.canMove(r_dir)) &&
-          (switch (mode) { 
-            case Mode.ANY -> true;
-            case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(r_next).getPaint().isAlly(); 
-            case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(r_next).getPaint().isEnemy(); 
-          })) { return r_dir; }
-      
+  /** Try moving one step along dir; returns dir if passable and mode-valid. */
+  private static Direction tryDir(MapLocation loc, Direction dir, boolean check, Mode mode) throws GameActionException {
+    MapLocation next = loc.add(dir);
+    if (Robot.rc.onTheMap(next) && MapData.passable(next)
+        && (!check || Robot.rc.canMove(dir))
+        && checkMode(next, mode))
+      return dir;
+    return null;
+  }
+
+  /** Greedy towards a goal location. */
+  public static Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean check, Mode mode) throws GameActionException {
+    Direction direct = loc.directionTo(goal);
+    Direction d = tryDir(loc, direct, check, mode);
+    if (d != null) return d;
+
+    Direction left  = direct.rotateLeft();
+    Direction right = direct.rotateRight();
+    MapLocation lNext = loc.add(left);
+    MapLocation rNext = loc.add(right);
+
+    if (lNext.distanceSquaredTo(goal) < rNext.distanceSquaredTo(goal)) {
+      d = tryDir(loc, left, check, mode);  if (d != null) return d;
+      d = tryDir(loc, right, check, mode); if (d != null) return d;
     } else {
-      if (Robot.rc.onTheMap(r_next) && MapData.passable(r_next) &&
-          (!checkCanMove || Robot.rc.canMove(r_dir)) &&
-          (switch (mode) { 
-            case Mode.ANY -> true;
-            case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(r_next).getPaint().isAlly(); 
-            case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(r_next).getPaint().isEnemy(); 
-          })) { return r_dir; }
-
-      if (Robot.rc.onTheMap(l_next) && MapData.passable(l_next) &&
-          (!checkCanMove || Robot.rc.canMove(l_dir)) &&
-          (switch (mode) { 
-            case Mode.ANY -> true;
-            case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(l_next).getPaint().isAlly(); 
-            case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(l_next).getPaint().isEnemy(); 
-          })) { return l_dir; }
+      d = tryDir(loc, right, check, mode); if (d != null) return d;
+      d = tryDir(loc, left, check, mode);  if (d != null) return d;
     }
     return null;
   }
 
-  /**
-   * Gets the best greedy move towards a goal location using the default ANY mode.
-   */
-  public static Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove) throws GameActionException {
-    return getGreedyMove(loc, goal, checkCanMove, Mode.ANY);
+  public static Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean check) throws GameActionException {
+    return getGreedyMove(loc, goal, check, Mode.ANY);
   }
 
-  /**
-   * Greedy move towards a direction instead of a location
-   */
-  public static Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove, Mode mode) throws GameActionException {
-    MapLocation next = loc.add(dir);
-    if (MapData.passable(next) && 
-        (!checkCanMove || Robot.rc.canMove(dir)) &&
-        (switch (mode) { 
-          case Mode.ANY -> true;
-          case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(next).getPaint().isAlly(); 
-          case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(next).getPaint().isEnemy(); 
-        })) { return dir; }
-    
-    Direction leftDir = dir.rotateLeft();
-    next = loc.add(leftDir);
-    if (Robot.rc.onTheMap(next) && MapData.passable(next) &&
-        (!checkCanMove || Robot.rc.canMove(leftDir)) &&
-        (switch (mode) { 
-          case Mode.ANY -> true;
-          case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(next).getPaint().isAlly(); 
-          case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(next).getPaint().isEnemy(); 
-        })) { return leftDir; }
-
-    dir = dir.rotateRight();
-    next = loc.add(dir);
-    if (Robot.rc.onTheMap(next) && MapData.passable(next) &&
-        (!checkCanMove || Robot.rc.canMove(dir)) &&
-        (switch (mode) { 
-          case Mode.ANY -> true;
-          case Mode.ALLY_ONLY -> Robot.rc.senseMapInfo(next).getPaint().isAlly(); 
-          case Mode.NO_ENEMY -> !Robot.rc.senseMapInfo(next).getPaint().isEnemy(); 
-        })) { return dir; }
-
-    return null;
+  /** Greedy towards a direction. */
+  public static Direction getGreedyMove(MapLocation loc, Direction dir, boolean check, Mode mode) throws GameActionException {
+    Direction d = tryDir(loc, dir, check, mode);
+    if (d != null) return d;
+    d = tryDir(loc, dir.rotateLeft(), check, mode);
+    if (d != null) return d;
+    d = tryDir(loc, dir.rotateRight(), check, mode);
+    return d;
   }
 
-  /**
-   * Gets the closest available direction to the target direction.
-   */
+  /** Spiral outward from preferred direction to find any passable tile. */
   public static Direction closestAvailableDirection(MapLocation loc, Direction dir) {
-    MapLocation resultLoc = loc.add(dir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return dir; }
-
-    Direction leftDir = dir.rotateLeft();
-    resultLoc = loc.add(leftDir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return leftDir; }
-
-    dir = dir.rotateRight();
-    resultLoc = loc.add(dir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return dir; }
-
-    leftDir = dir.rotateLeft();
-    resultLoc = loc.add(leftDir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return leftDir; }
-
-    dir = dir.rotateRight();
-    resultLoc = loc.add(dir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return dir; }
-    
-    leftDir = dir.rotateLeft();
-    resultLoc = loc.add(leftDir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return leftDir; }
-
-    dir = dir.rotateRight();
-    resultLoc = loc.add(dir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return dir; }
-
-    leftDir = dir.rotateLeft();
-    resultLoc = loc.add(leftDir);
-    if (Robot.rc.onTheMap(resultLoc) && MapData.passable(resultLoc)) { return leftDir; }
-
+    for (int i = 0; i < 8; i++) {
+      MapLocation next = loc.add(dir);
+      if (Robot.rc.onTheMap(next) && MapData.passable(next)) return dir;
+      dir = (i % 2 == 0) ? dir.rotateLeft() : dir.rotateRight();
+    }
     return null;
   }
 }
-
-// Credits: justinottesen/battlecode25
