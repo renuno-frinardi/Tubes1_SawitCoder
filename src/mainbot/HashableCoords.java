@@ -1,4 +1,4 @@
-package alternatifbot1;
+package mainbot;
 
 /**
  * Wrapper immutable untuk koordinat (x, y) yang mendukung hashing.

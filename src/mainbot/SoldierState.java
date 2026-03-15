@@ -1,4 +1,4 @@
-package alternatifbot1;
+package mainbot;
 
 /**
  * Enum yang merepresentasikan state FSM (Finite State Machine) soldier.

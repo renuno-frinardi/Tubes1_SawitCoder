@@ -1,4 +1,4 @@
-package alternatifbot1;
+package mainbot;
 
 import battlecode.common.*;
 import java.util.ArrayList;

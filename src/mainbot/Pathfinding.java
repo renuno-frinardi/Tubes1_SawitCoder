@@ -1,10 +1,10 @@
-package alternatifbot1;
+package mainbot;
 
 import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static alternatifbot1.RobotPlayer.*;
+import static mainbot.RobotPlayer.*;
 
 /**
  * Kelas Pathfinding menyediakan berbagai metode navigasi berbasis algoritma greedy.

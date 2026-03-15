@@ -1,7 +1,7 @@
-package alternatifbot1;
+package mainbot;
 
 import battlecode.common.*;
-import static alternatifbot1.RobotPlayer.*;
+import static mainbot.RobotPlayer.*;
 
 /**
  * Kelas Splasher mengatur perilaku robot tipe Splasher.
