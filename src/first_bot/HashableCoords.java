@@ -1,4 +1,4 @@
-package mainbot;
+package first_bot;
 
 /**
  * Wrapper immutable untuk koordinat (x, y) yang mendukung hashing.

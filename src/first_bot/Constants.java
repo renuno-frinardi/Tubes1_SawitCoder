@@ -1,4 +1,4 @@
-package mainbot;
+package first_bot;
 
 /**
  * Kelas Constants menyimpan semua konstanta konfigurasi untuk bot.

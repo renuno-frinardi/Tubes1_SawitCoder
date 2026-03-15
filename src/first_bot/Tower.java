@@ -1,7 +1,7 @@
-package mainbot;
+package first_bot;
 
 import battlecode.common.*;
-import static mainbot.RobotPlayer.*;
+import static first_bot.RobotPlayer.*;
 
 /**
  * Kelas Tower mengatur perilaku tower (bangunan pertahanan/ekonomi).
