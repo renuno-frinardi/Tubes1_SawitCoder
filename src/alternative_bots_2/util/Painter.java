@@ -1,6 +1,6 @@
-package michael_2.util;
+package alternative_bots_2.util;
 
-import michael_2.*;
+import alternative_bots_2.*;
 
 import battlecode.common.*;
 
@@ -298,7 +298,7 @@ public class Painter {
     return allClean;
   }
 
-  // ----- Tiny helpers -----
+  // ----- helpers -----
 
   private static void paintSelfInPattern(MapLocation center) throws GameActionException {
     MapLocation me = Robot.rc.getLocation();

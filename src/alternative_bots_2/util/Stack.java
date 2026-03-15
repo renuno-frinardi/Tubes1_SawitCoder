@@ -1,4 +1,4 @@
-package michael_2.util;
+package alternative_bots_2.util;
 
 /**
  * Simple fixed size stack helper class

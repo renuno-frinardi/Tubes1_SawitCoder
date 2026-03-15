@@ -1,6 +1,6 @@
-package michael_2.util;
+package alternative_bots_2.util;
 
-import michael_2.*;
+import alternative_bots_2.*;
 
 import battlecode.common.*;
 
